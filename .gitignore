@@ -1,0 +1,52 @@
+# ------------------------------------------------------------
+# Root gitignore (Dockerized Laravel repo)
+# ------------------------------------------------------------
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+auth.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs / caches
+*.log
+
+# IDEs / editors
+.idea/
+.vscode/
+.zed/
+.fleet/
+
+# ------------------------------------------------------------
+# Laravel app lives in /src (keep these ignores here so they
+# apply even if the /src/.gitignore changes or is missing)
+# ------------------------------------------------------------
+
+src/.env
+src/.env.*
+!src/.env.example
+
+src/vendor/
+src/node_modules/
+
+src/public/build/
+src/public/hot
+src/public/storage
+
+src/storage/*.key
+src/storage/pail/
+
+src/.phpunit.cache/
+src/phpunit.result.cache
+
+src/.phpactor.json
+src/.nova/
+
+# If you ever add DB data folders under the repo (bind mounts)
+docker/db/
+src/docker/db/
+
