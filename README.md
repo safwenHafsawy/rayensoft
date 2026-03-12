@@ -1,5 +1,3 @@
-# Agency Dashboard (Laravel + Docker)
-
 This repo is a Laravel 12 app dockerized with **Docker Compose**:
 
 - `app` = PHP-FPM (PHP 8.3 + Composer + Node)
