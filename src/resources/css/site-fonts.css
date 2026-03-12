@@ -1,0 +1,52 @@
+/* ASAP */
+@font-face {
+    font-family: 'Asap';
+    src: url('../fonts/asap-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Asap';
+    src: url('../fonts/asap-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Asap';
+    src: url('../fonts/asap-ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+    font-style: normal;
+    font-display: swap;
+}
+
+
+/* SCADA */
+@font-face {
+    font-family: 'Scada';
+    src: url('../fonts/scada-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Scada';
+    src: url('../fonts/scada-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Alegreya */
+
+@font-face {
+    font-family: 'Alegreya';
+    src: url('../fonts/alegreya-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}

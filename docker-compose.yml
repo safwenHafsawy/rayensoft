@@ -1,0 +1,87 @@
+# docker-compose.yml defines and runs multi-container Docker applications.
+# It allows you to configure all the services your app needs (database, web server, etc.) in one file.
+
+# The 'services' section defines the different containers that will make up your application.
+services:
+  # ---------------------------------------------------------------------------
+  # APP SERVICE (The PHP Engine)
+  # ---------------------------------------------------------------------------
+  # This container runs PHP-FPM to process your Laravel application's PHP code.
+  app:
+    # 'build' tells Docker how to create the image for this container instead of downloading a pre-built one.
+    build:
+      # 'context: .' means use the current directory as the starting point for the build.
+      context: .
+      target: ${BUILD_TARGET:-production}
+      # 'dockerfile' specifies the exact file to use for instructions to build the image.
+      dockerfile: Dockerfile
+    networks:
+      - internal_network
+
+
+  # ---------------------------------------------------------------------------
+  # WEB SERVICE (The Web Server - Nginx)
+  # ---------------------------------------------------------------------------
+  # This container acts as the front door, receiving HTTP requests and sending them to the 'app' container.
+  web:
+    # 'image' tells Docker to download the official Nginx image (the smaller 'alpine' version) from Docker Hub.
+    image: nginx:alpine
+    # 'restart: unless-stopped' ensures the container automatically restarts if it crashes or if the computer reboots.
+    restart: unless-stopped
+    # 'ports' maps ports from your host machine (your computer) to the container.
+    # Format is "HOST_PORT:CONTAINER_PORT". If APP_PORT is missing from .env, it defaults to 8000.
+    ports:
+      - "${APP_PORT:-8000}:80"
+    # 'volumes' links a folder on your computer to a folder inside the container.
+    # Here, it syncs your local './src' folder into the container's '/var/www/html'.
+    volumes:
+      - ./src:/var/www/html
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    # 'depends_on' ensures this container only starts AFTER the 'app' container is up and running.
+    depends_on:
+      - app
+    # 'networks' connects this container to a private network shared with other containers.
+    networks:
+      - internal_network
+
+  # ---------------------------------------------------------------------------
+  # DATABASE SERVICE (The Database - MariaDB)
+  # ---------------------------------------------------------------------------
+  # This container runs your database engine.
+  db:
+    image: mariadb:10.6
+    restart: unless-stopped
+    # 'environment' sets environment variables inside the container, pulling values from your .env file.
+    # This sets up the default database, user, and passwords.
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    ports:
+      # Maps your computer's port (from DB_PORT in .env, defaulting to 3306) to MariaDB's port 3306.
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      # Maps a named volume (db_data) to the container's database storage directory.
+      # This ensures database data survives even if the container is deleted!
+      - db_data:/var/lib/mysql
+    networks:
+      - internal_network
+
+# -----------------------------------------------------------------------------
+# NETWORK CONFIGURATION
+# -----------------------------------------------------------------------------
+# Defines custom networks for the containers to communicate securely.
+networks:
+  internal_network:
+    # 'bridge' is the default driver, creating an isolated network for containers on the same host.
+    driver: bridge
+
+# -----------------------------------------------------------------------------
+# VOLUME CONFIGURATION
+# -----------------------------------------------------------------------------
+# Defines named volumes for persistent data storage.
+# Unlike bind mounts (like ./src:/var/www/html), Docker manages these entirely.
+volumes:
+  # The database files
+  db_data: 

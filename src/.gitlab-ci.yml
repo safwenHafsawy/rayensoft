@@ -1,0 +1,54 @@
+stages:
+  - build
+  - deploy
+
+# --------------------------------------------------------------------------
+# STAGE 1: THE BUILD STAGE
+# --------------------------------------------------------------------------
+build_dashboard:
+  image: lorisleiva/laravel-docker:8.2
+  stage: build
+  script:
+    # Install PHP depencies for production
+    - composer install --optimize-autoloader --no-dev --no-interaction
+    
+    # Install Node packages and compile assets
+    - npm install
+    - npm run build
+    
+    # Destroy the heavy node_modules folder
+    - rm -rf node_modules
+  artifacts:
+    expire_in: 1 hour
+    paths:
+      - ./*
+
+# --------------------------------------------------------------------------
+# STAGE 2: THE DEPLOY STAGE (SECURE ZIP METHOD)
+# --------------------------------------------------------------------------
+deploy_to_cpanel:
+  image: alpine:latest
+  stage: deploy
+  dependencies:
+    - build_dashboard
+  script:
+    - apk update && apk add lftp zip curl
+    
+    # Zip the project, but LEAVE it in the main folder
+    - zip -q -r deploy.zip . -x "*.git*" "*docker*" "docker-compose.yml" ".gitlab-ci.yml"
+    
+    # Create the extractor script in the public folder
+    - echo "<?php \$zip = new ZipArchive; if (\$zip->open('../deploy.zip') === TRUE) { \$zip->extractTo('../'); \$zip->close(); unlink('../deploy.zip'); unlink(__FILE__); echo 'DEPLOY SUCCESSFUL!'; } else { echo 'DEPLOY FAILED!'; } ?>" > public/extract.php
+    
+    # Upload the zip to the PRIVATE root, and the extractor to the PUBLIC folder
+    # set ftp:ssl-force true : upgrades the connection from basic ftp to ftp over ssl, if server tries to downgrade it hangs up imediatly
+    # set ftp:ssl-protect-data true : foces the encryption of the data channel (which sends the files) as well
+    # set ssl:verify-certificate no : disables the verification of the ssl certificate (required for self signed certificates)
+    - lftp -c "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate no; open -u $FTP_USER,$FTP_PASS $FTP_HOST; put deploy.zip; put public/extract.php -o public/extract.php"
+    
+    # Trigger the extraction
+    - echo "Triggering cPanel extraction..."
+    - curl -s "https://portal.webuildsolution.com/extract.php"
+  
+  only:
+    - main

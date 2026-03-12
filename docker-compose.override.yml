@@ -1,0 +1,54 @@
+# docker-compose.override.yml is automatically merged with the main docker-compose.yml file.
+# It is specifically designed for local development settings that you don't want in production.
+# For example: mapping local folders (volumes) and exposing extra ports for debugging.
+
+services:
+  # ---------------------------------------------------------------------------
+  # APP SERVICE (PHP)
+  # ---------------------------------------------------------------------------
+  app:
+    # 'volumes' links your local 'src' folder to the container's code folder.
+    # This allows "Hot Reloading": when you change a PHP file on your computer, 
+    # the change is immediately reflected inside the running container.
+    volumes:
+      - ./src:/var/www/html
+
+  # ---------------------------------------------------------------------------
+  # VITE SERVICE (Frontend Builder)
+  # ---------------------------------------------------------------------------
+  # We have Vite here because we only need the development server running locally.
+  vite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Sync source code for frontend asset compilation.
+      - ./src:/var/www/html
+    ports:
+      # Exposes the Vite dev server port (default 5173).
+      - "${VITE_PORT:-5173}:5173"
+    # Overwrites the Dockerfile's CMD to install packages and start the dev server.
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    networks:
+      - internal_network
+
+  # ---------------------------------------------------------------------------
+  # WEB SERVICE (Nginx)
+  # ---------------------------------------------------------------------------
+  # Note: This MUST be named 'web' to match the service name in docker-compose.yml
+  web:
+    ports:
+      # Maps your local machine's port (default 8000) to Nginx's port 80.
+      - "${APP_PORT:-8000}:80"
+    volumes:
+      # Sync source code so Nginx can serve static files directly.
+      - ./src:/var/www/html
+
+  # ---------------------------------------------------------------------------
+  # DATABASE SERVICE (MariaDB)
+  # ---------------------------------------------------------------------------
+  db:
+    ports:
+      # Exposes the database port so you can connect to it using tools like 
+      # TablePlus, DBeaver, or HeidiSQL from your computer.
+      - "${DB_PORT:-3306}:3306"
