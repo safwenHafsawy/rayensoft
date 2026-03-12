@@ -160,11 +160,3 @@ docker compose exec app ./vendor/bin/pint
   docker compose down -v
   docker compose up -d --build
   ```
-
-## Production image (optional)
-
-The `Dockerfile` has a `production` target (builds assets + installs prod Composer deps).
-
-```bash
-BUILD_TARGET=production docker compose build app
-```
